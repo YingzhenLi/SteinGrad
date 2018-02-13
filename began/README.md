@@ -19,11 +19,11 @@ and [shutil](https://docs.python.org/2/library/shutil.html).
 When you have data and packages ready, you can modify lines 38 and 124 of 
 [mnist_exp.py](https://github.com/YingzhenLi/SteinGrad/blob/master/began/mnist_exp.py), and run
 
-    python mnist_exp.py method entropy_option gamma alpha
+    python mnist_exp.py method entropy_option gamma eta
     
 where method can be one of the following:
 
-'original': run the original BEGAN, here entropy_option and alpha is ineffective
+'original': run the original BEGAN, here entropy_option and eta is ineffective
 
 'kde': run entropy regularised BEGAN with KDE plugin gradient estimator
 
@@ -37,4 +37,4 @@ For methods other than 'orginal', the entropy_option can be one of the following
 
 'proxyH': a proxy loss using first-order Taylor expansion + MC estimate, see details in the paper
 
-Lastly gamma is a hyper-parameter for BEGAN and alpha is the hyper-parameter to control entropy regularisation.
+Lastly gamma is a hyper-parameter for BEGAN and eta = gamma * alpha relates to the hyper-parameter that controls entropy regularisation.
