@@ -18,7 +18,7 @@ np.random.seed(seed)
 tf.set_random_seed(seed)
 
 # load data
-datapath = # DATA_PATH
+datapath = 'data/'
 total_dev, total_test = load_uci_data(datapath, test_name, merge = False)
 
 # experiment setup

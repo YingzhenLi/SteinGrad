@@ -24,7 +24,7 @@ np.random.seed(seed)
 tf.set_random_seed(seed)
 
 # load data
-datapath = # DATA_PATH
+datapath = 'data/'
 X_train, y_train = load_uci_data(datapath, train_name, merge = True)
 total_dev, total_test = load_uci_data(datapath, test_name, merge = False)
 N_train, dimX = X_train.shape
