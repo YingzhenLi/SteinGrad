@@ -52,7 +52,7 @@ c_ph = tf.placeholder(tf.float32, shape=(n_particle, dimTheta, dimH_nn), name = 
 N_ph = tf.placeholder(tf.float32, shape=())
 
 # ops for training the langevin sampler
-q_sampler = init_nn_sampler(dimTheta, dimH_nn, grad_logp_func, name = 'lstm_sampler')
+q_sampler = init_nn_sampler(dimTheta, dimH_nn, grad_logp_func, name = 'nn_sampler')
 loss, theta_q_train, h_q_train, c_q_train = \
     amortised_loss(theta_ph, X_ph, y_ph, h_ph, c_ph, N_ph, 
                    q_sampler, grad_logp_func, method, shapes, T_unroll, hsquare, lbd)
@@ -205,8 +205,11 @@ print "ksd", np.mean(results['ksd'][:, -1]), np.std(results['ksd'][:, -1])
 # save model
 if not load_file:
     t_vars = tf.trainable_variables()
-    params = [v for v in t_vars if 'langevin_sampler' in v.name]
+    params = [v for v in t_vars if 'nn_sampler' in v.name]
     params_eval = sess.run(params)
+    if not os.path.isdir('models/'):
+        os.mkdir('models')
+        print 'create path models/'
     g = open('models/' + filename, 'w')
     pickle.dump(params_eval, g)
     print "model params saved in models/%s" % filename
