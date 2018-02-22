@@ -17,8 +17,8 @@ def init_nn_sampler(dimX, dimH, grad_logp_func, name = 'nn_sampler'):
     # parameters
     print 'add in MLP with %d units...' % dimH
     d_in = 2
-    W1 = tf.Variable(tf.random_normal(shape=(d_in+dimH, dimH*4))*0.01, name = name + '_W1')
-    b1 = tf.Variable(tf.random_normal(shape=(dimH*4,))*0.01, name = name + '_b1')
+    #W1 = tf.Variable(tf.random_normal(shape=(d_in+dimH, dimH*4))*0.01, name = name + '_W1')
+    #b1 = tf.Variable(tf.random_normal(shape=(dimH*4,))*0.01, name = name + '_b1')
     print 'add in one hidden layer mlp...'
     W2 = tf.Variable(tf.random_normal(shape=(d_in, dimH))*0.01, name = name + '_W2')
     b2 = tf.Variable(tf.random_normal(shape=(dimH, ))*0.01, name = name + '_b2')
