@@ -47,15 +47,12 @@ T_unroll = 10
 X_ph = tf.placeholder(tf.float32, shape=(batch_size*T_unroll, dimX), name = 'X_ph')
 y_ph = tf.placeholder(tf.float32, shape=(batch_size*T_unroll, 1), name = 'y_ph')
 theta_ph = tf.placeholder(tf.float32, shape=(n_particle, dimTheta), name = 'theta_ph')
-h_ph = tf.placeholder(tf.float32, shape=(n_particle, dimTheta, dimH_nn), name = 'h_ph')
-c_ph = tf.placeholder(tf.float32, shape=(n_particle, dimTheta, dimH_nn), name = 'c_ph')
 N_ph = tf.placeholder(tf.float32, shape=())
 
 # ops for training the langevin sampler
 q_sampler = init_nn_sampler(dimTheta, dimH_nn, grad_logp_func, name = 'nn_sampler')
-loss, theta_q_train, h_q_train, c_q_train = \
-    amortised_loss(theta_ph, X_ph, y_ph, h_ph, c_ph, N_ph, 
-                   q_sampler, grad_logp_func, method, shapes, T_unroll, hsquare, lbd)
+loss, theta_q_train = amortised_loss(theta_ph, X_ph, y_ph, N_ph, q_sampler, grad_logp_func, 
+                                     method, shapes, T_unroll, hsquare, lbd)
 lr_ph = tf.placeholder(tf.float32, shape=(), name = 'lr_ph')
 opt = tf.train.AdamOptimizer(learning_rate = lr_ph).minimize(loss)
 
@@ -69,11 +66,7 @@ dimTheta = int(np.prod(shapes[0]) + shapes[0][-1] + np.prod(shapes[1]) + shapes[
 X_ph_test = tf.placeholder(tf.float32, shape=(batch_size, dimX), name = 'X_ph_test')
 y_ph_test = tf.placeholder(tf.float32, shape=(batch_size, 1), name = 'y_ph_test')
 theta_ph_test = tf.placeholder(tf.float32, shape=(n_particle_test, dimTheta), name = 'theta_ph_test')
-h_ph_test = tf.placeholder(tf.float32, shape=(n_particle_test, dimTheta, dimH_nn), name = 'h_ph_test')
-c_ph_test = tf.placeholder(tf.float32, shape=(n_particle_test, dimTheta, dimH_nn), name = 'c_ph_test')
-
-theta_q_test, h_q_test, c_q_test = q_sampler(theta_ph_test, X_ph_test, y_ph_test, \
-                                             N_ph, h_ph_test, c_ph_test, shapes)
+theta_q_test = q_sampler(theta_ph_test, X_ph_test, y_ph_test, N_ph, shapes)
 
 # now check init
 print "initialise tensorflow variables..."
@@ -92,12 +85,10 @@ def init_theta(a0=1, b0=0.1, n_particle=20, dim = 10, seed = None):
     if seed is not None: np.random.seed(seed)
     theta = np.random.normal(loc=np.zeros((n_particle, 1)), scale=1.0,
                 size=(n_particle, dim))
-    h = np.zeros([n_particle, dim, dimH_nn])
-    c = np.zeros([n_particle, dim, dimH_nn])
-    return theta, h, c
+    return theta
 
 # load file
-n_iter = 1000
+n_iter = 500
 filename = "model_T%d_%s_%s_seed%d_hsquare%.2f_lbd%.1f.pkl" % (n_iter, train_name, method, seed, hsquare, lbd)
 
 load_file = False 
@@ -117,17 +108,14 @@ else:
     # first training the network
     print "Start Training the NN Sampler"
     # langevin sampler
-
     np.random.seed(seed)
-    theta, h, c = init_theta(dim = dimTheta_train, n_particle=n_particle)
+    theta = init_theta(dim = dimTheta_train, n_particle=n_particle)
     for iteration in tqdm(range(1, n_iter+1)):
         ind = np.random.permutation(range(N_train))[:T_unroll*batch_size]
-        _, theta, h, c = sess.run((opt, theta_q_train, h_q_train, c_q_train), \
-                               feed_dict={X_ph: X_train[ind], y_ph: y_train[ind], \
-                                          lr_ph: lr_train, N_ph: N_train, \
-                                          theta_ph: theta, h_ph: h, c_ph: c})
+        _, theta = sess.run((opt, theta_q_train), feed_dict={X_ph: X_train[ind], y_ph: y_train[ind], \
+                                                             lr_ph: lr_train, N_ph: N_train, theta_ph: theta})
         if (iteration+1) % 100 == 0:
-            theta, h, c = init_theta(dim = dimTheta_train, n_particle=n_particle)
+            theta = init_theta(dim = dimTheta_train, n_particle=n_particle)
 
 # now start testing
 total_entropy_acc = []
@@ -153,6 +141,9 @@ def _chunck_eval(sess, X_test, y_test, theta, N):
 
 print "Start testing on separete data set"
 T_test = 2000
+if test_name == 'sonar':
+    T_test = 5000
+    print 'for sonar dataset, run longer T=%d ...' % T_test
 results = {'acc':[], 'll':[], 'ksd':[]}
 
 for data_i in range(0, len(total_dev)):
@@ -169,13 +160,11 @@ for data_i in range(0, len(total_dev)):
     total_m_ksd = []
     
     # nn sampler
-    theta, h, c = init_theta(dim = dimTheta, n_particle = n_particle_test, seed=0)
-    ops = (theta_q_test, h_q_test, c_q_test)
+    theta = init_theta(dim = dimTheta, n_particle = n_particle_test, seed=0)
     for t in tqdm(range(T_test)):
         ind = np.random.permutation(range(dev_N))[:batch_size] 
-        theta, h, c = sess.run(ops, feed_dict={X_ph_test: X_dev[ind], y_ph_test: y_dev[ind], \
-                                                   N_ph: dev_N, theta_ph_test: theta, \
-                                                   h_ph_test: h, c_ph_test: c})
+        theta = sess.run(theta_q_test, feed_dict={X_ph_test: X_dev[ind], y_ph_test: y_dev[ind], \
+                                                  N_ph: dev_N, theta_ph_test: theta})
         if (t+1) % 50 == 0:
             acc, ll, ksd = _chunck_eval(sess, X_test, y_test, theta, dev_N)
             print acc, ll, ksd, t+1, theta[0, 0], theta[0, 1]
@@ -208,7 +197,7 @@ if not load_file:
     params = [v for v in t_vars if 'nn_sampler' in v.name]
     params_eval = sess.run(params)
     if not os.path.isdir('models/'):
-        os.mkdir('models')
+        os.mkdir('models/')
         print 'create path models/'
     g = open('models/' + filename, 'w')
     pickle.dump(params_eval, g)
