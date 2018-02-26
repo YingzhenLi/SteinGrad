@@ -20,3 +20,13 @@ Contributions: Yingzhen derived the estimator and implemented all experiments. R
 I've got three experiments to demonstrate the wide application of the gradient estimator. In the folders you can find the corresponding code, each accompanied by another README.md for further details.
 
 Also the kernel induced hamiltonian flow code depends on another package, see [https://github.com/karlnapf/kernel_hmc](https://github.com/karlnapf/kernel_hmc)
+
+## Citing the paper (bib)
+```
+@inproceedings{li2018gradient,
+  title = {Gradient Estimators for Implicit Models},
+  author = {Li, Yingzhen and Turner, Richard E.},
+  booktitle = {International Conference on Learning Representations},
+  year = {2018}
+}
+```
