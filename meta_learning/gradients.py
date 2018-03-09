@@ -38,10 +38,7 @@ def score_approx_gradient(grad_logp, z, hsquare = -1.0, lbd = 0.1):
     Kxy_ = tf.expand_dims(Kxy, 2)
     Kxy_Dx = tf.transpose(Kxy_ * z, [2, 0, 1])
     Dx_Kxy = tf.transpose(tf.transpose(Kxy_, [1, 0, 2]) * z, [2, 1, 0])
-    if tf.__version__ in ['0.11.0']:
-        C = tf.batch_matmul(Dx_Kxy - Kxy_Dx, Kxy_Dx - Dx_Kxy)
-    if tf.__version__ in ['1.0.1']:
-        C = tf.matmul(Dx_Kxy - Kxy_Dx, Kxy_Dx - Dx_Kxy)
+    C = tf.matmul(Dx_Kxy - Kxy_Dx, Kxy_Dx - Dx_Kxy)
     C = tf.reduce_mean(C, 0)	# shape (K, K)
     delta = tf.diag(tf.ones(shape=(K,))) * lbd
     print 'delta', lbd
