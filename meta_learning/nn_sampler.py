@@ -1,18 +1,6 @@
 import numpy as np
 import tensorflow as tf
 
-def concat(x, axis):
-    if tf.__version__ in ['0.11.0']:
-        return tf.concat(axis, x)
-    if tf.__version__ in ['1.0.1']:
-        return tf.concat(x, axis)
-
-def split(x, axis, num_split):
-    if tf.__version__ in ['0.11.0']:
-        return tf.split(axis, num_split, x)
-    if tf.__version__ in ['1.0.1']:
-        return tf.split(x, num_split, axis)
-
 def init_nn_sampler(dimX, dimH, grad_logp_func, name = 'nn_sampler'):
     # parameters
     print 'add in MLP with %d units...' % dimH
@@ -30,7 +18,7 @@ def init_nn_sampler(dimX, dimH, grad_logp_func, name = 'nn_sampler'):
         grad_z_processed = tf.expand_dims(grad_z, 2)
         
         # transformation for the output, using skip connections
-        x = concat([tf.expand_dims(z, 2), grad_z_processed], 2)
+        x = tf.concat([tf.expand_dims(z, 2), grad_z_processed], 2)
         x = tf.expand_dims(x, 3)	# (K, dimX, 2, 1)
         F = tf.nn.softplus(tf.reduce_sum(x*W2, 2) + b2)
         direction = tf.reduce_sum(F*W3, 2) + b3 	# shape (K, dimX)
