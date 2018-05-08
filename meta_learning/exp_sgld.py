@@ -61,8 +61,9 @@ if len(init_var_list) > 0:
     init = tf.initialize_variables(var_list = init_var_list)
     sess.run(init)
 
-acc_op, ll_op = evaluate(X_ph_test, y_ph, theta_ph_test, shapes, activation = 'sigmoid')
-grad_test = grad_logp_func(X_ph_test, y_ph, theta_ph_test, N_ph, shapes)
+activation_test = 'sigmoid'
+acc_op, ll_op = evaluate(X_ph_test, y_ph, theta_ph_test, shapes, activation = activation_test)
+grad_test = grad_logp_func(X_ph_test, y_ph, theta_ph_test, N_ph, shapes, activation = activation_test)
 ksd_op = KSD(theta_ph_test, grad_test)
 
 def _chunck_eval(sess, X_test, y_test, theta, N):
