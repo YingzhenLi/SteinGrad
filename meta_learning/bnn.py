@@ -43,10 +43,10 @@ def evaluate(X, y, theta, shapes = None, activation = 'relu'):
     
     return acc, llh   
 
-def grad_bnn(X, y, theta, data_N, shapes = None):
+def grad_bnn(X, y, theta, data_N, shapes = None, activation = 'relu'):
     # use tensorflow automatic differentiation to compute the gradients
     #prob = tf.clip_by_value(predict(X, theta, shapes), 1e-8, 1.0 - 1e-8)
-    logit = predict(X, theta, shapes)
+    logit = predict(X, theta, shapes, activation)
     N, K = logit.get_shape().as_list()
     y_ = tf.tile(y, [1, K])
     # for tensorflow r0.11
