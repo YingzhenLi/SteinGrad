@@ -1,7 +1,8 @@
 import numpy as np
 import tensorflow as tf
 
-def init_nn_sampler(dimX, dimH, grad_logp_func, name = 'nn_sampler'):
+
+def init_nn_sampler(dimH, name = 'nn_sampler'):
     # parameters
     print 'add in MLP with %d units...' % dimH
     d_in = 2
@@ -28,10 +29,11 @@ def init_nn_sampler(dimX, dimH, grad_logp_func, name = 'nn_sampler'):
         
         return delta
     
-    def nn_sampler(z, X, y, data_N, shapes = None):
+    def nn_sampler(z, X, y, data_N, grad_logp_func, shapes = None, eps = 1e-5):
+        print "calling the sampler, shape(Theta)=", z.get_shape()
         noise = tf.random_normal(z.get_shape())
         grad_logp = grad_logp_func(X, y, z, data_N, shapes)
-        delta = network_transform(z, grad_logp)
+        delta = network_transform(z, grad_logp, eps)
         z = z + delta
             
         return z

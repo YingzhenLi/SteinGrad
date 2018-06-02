@@ -1,11 +1,44 @@
 # Meta-learning for approximate posterior samplers
 
-Why not try to think about how meta-learning can help learning inference methods, such as approximate posterior samplers? :)
+Why not try to think about how meta-learning can help learning inference methods, 
+such as training posterior samplers that can generalise to unseen tasks? :)
+
+## improved version (update: Jun 2018)
+
+Here I include a new **SG-MCMC sampler** that is learnable via meta-learning. 
+You can have a look at the two files in [sampler/](sampler/) and see how they differ from each other. 
+The meta-leanred **SG-MCMC sampler** is generally better than the meta-learned **approximate sampler**.
+
+[Wenbo Gong](http://mlg.eng.cam.ac.uk/?portfolio=wenbo-gong) and I recently developed an even more advanced 
+version of meta-learnable **SG-MCMC sampler** than the version included here. 
+With that latest version we can finally do BNN classification on MNIST and also Bayesian RNNs!
+We will release the paper and pyTorch code very soon :) There will be a link here pointing to that repo.
+
+For other updates, I improved the orginal code a bit more to make it cleaner. 
+Also I fixed a few bugs and added a new technique that is a bit like "experience reply" in deep RL, 
+now the results for the **approximate samplers** are even better than reported in the ICLR camera ready.
+
+To test the current version:
+
+Training:
+
+    python train_grad_uci.py --method stein --task crabs
+
+This command will train an approximate sampler on the crabs data, using the Stein gradient estimator to approximate the entropy gradient.
+See the code for the usage of more arguments.
+
+Once trained a sampler, to test it, run
+
+    python test_uci.py --method stein --task sonar
+
+
+=====================================================
 
 As far as I know, this is the first attempt that tried meta-learning for (approximate) posterior samplers 
-(first submission done in May 2017). There are two very recent papers -- [Song et al. 2017](https://docs.python.org/2/library/shutil.html) 
+(first arXiv submission in May 2017). There are two very recent papers -- [Song et al. 2017](https://docs.python.org/2/library/shutil.html) 
 and [Levy et al. 2017](https://arxiv.org/abs/1711.09268) -- 
-that also investigate this task, but the ways they do it are very different.
+that also investigate this task, but the ways they do it are very different. 
+Their experimental results are very good, but their approaches do not generalise to different dimensions. We do.
 
 Essentially the inspiration comes from SGLD ([Welling and Teh 2011](https://dl.acm.org/citation.cfm?id=3104568)) and 
 Learning by gradient descent "square" ([Andrychowicz et al. 2016](https://arxiv.org/abs/1606.04474)). We know that SG-MCMC in
@@ -18,28 +51,3 @@ lower-bound.
 Then the variational lower-bound is intractable due to the implicitly defined distribution of the approximate sampler. 
 So it's a natural idea to try our gradient estimator here!
 
-To see how it works, run
-
-    python exp_nn.py method train_data test_data seed hsquare eta
-    
-and here we support 4 methods:
-
-'map': use MAP objective and ignore the entropy term, none of the gradient estimator will be used
-
-'kde': use variational lower-bound and KDE plugin estimator for the entropy gradient
-
-'score': use variational lower-bound and score matching gradient estimator for the entropy gradient
-
-'stein': use variational lower-bound and Stein gradient estimator for the entropy gradient
-
-train_data and test_data are the names of the datasets that used to train/test the sampler.
-
-seed is the integer for the random seed
-
-hsquare and eta are hyper-parameters of the (kernel-based) gradient estimators, see paper for details.
-
-You can also run 
-
-    python exp_sgld.py test_data seed
-    
-to see the performance of SGLD.

@@ -58,7 +58,8 @@ def stein_approx_gradient(grad_logp, theta, hsquare = -1.0, lbd = 1.0):
     return grad_logp + gamma * entropy_grad
 
 def amortised_loss(theta_init, X, y, data_N, sampler, grad_logp_func, 
-                   method = 'map', shapes = None, T = 10, hsquare=-1.0, lbd = 0.01):
+                   method = 'map', shapes = None, T = 10, hsquare=-1.0, 
+                   lbd = 0.01, stepsize = 1e-5):
     # first get samples from the langevin sampler
     loss = 0.0
     batch_size = y.get_shape().as_list()[0] / T
@@ -66,9 +67,11 @@ def amortised_loss(theta_init, X, y, data_N, sampler, grad_logp_func,
     for t in xrange(T):
         X_batch = X[t*batch_size:(t+1)*batch_size]
         y_batch = y[t*batch_size:(t+1)*batch_size]
-        theta = sampler(theta_init, X_batch, y_batch, data_N, shapes)
+        theta = sampler(theta_init, X_batch, y_batch, data_N, grad_logp_func, shapes, stepsize)
         # second compute moving direction
         grad_logp = grad_logp_func(X_batch, y_batch, theta, data_N, shapes)
+        # stop gradient for grad_logp, see deepmind paper
+        grad_logp = tf.stop_gradient(grad_logp)
         if method == 'kde':
             grad_theta = kde_approx_gradient(grad_logp, theta, hsquare, lbd)
         if method == 'score':

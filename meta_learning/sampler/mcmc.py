@@ -16,9 +16,72 @@ def one_step_dynamics(X, y, theta, data_N, grad_logp_func, method = 'svgd', lr=1
         grad_theta = entropy_approx_gradient(grad_logp, theta)
         theta_new = theta + (lr / tf.sqrt((1 - a) * grad_theta**2  + b)) * grad_theta
     if method == 'sgld':
-        theta_new = theta + lr * grad_logp / 2 + tf.sqrt(lr) * tf.random_normal(theta.get_shape())
+        theta_new = theta + lr * grad_logp + tf.sqrt(2 * lr) * tf.random_normal(theta.get_shape())
 
     return theta_new
+
+def one_step_sgfs(X, y, theta, grad_var, data_N, grad_logp_func_per_sample, 
+                  lr=1e-2, alpha=0.5, shapes=None):
+    # run stochastic gradient fisher scoring with diagonal matrix
+    # here B = bI, b = eta, eta = (n+N) / n, alpha=kappa (see original paper)
+
+    n = X.get_shape().as_list()[0]
+    eta = (float(n) + data_N) / float(n)
+    
+    grad_ll, grad_prior = grad_logp_func_per_sample(X, y, theta, data_N, shapes)
+    mean_grad_ll = tf.reduce_mean(grad_ll, 0)
+    var_grad_ll = tf.reduce_sum((grad_ll - mean_grad_ll)**2, 0) / float(n-1)
+    grad_var_new = (1 - alpha) * grad_var + alpha * var_grad_ll
+
+    b = eta
+    scale = eta * data_N * grad_var_new + 4 * b / lr
+    noise = tf.random_normal(theta.get_shape()) * tf.sqrt(4 * b / lr)
+    grad_logp = grad_prior + data_N * mean_grad_ll
+    theta_new = theta + 2.0 / scale * (grad_logp + noise)
+
+    return theta_new, grad_var_new
+
+def one_step_psgld(X, y, theta, grad_var, data_N, grad_logp_func, 
+                  lr=1e-2, alpha=0.5, shapes=None):
+    # run sgld with preconditioner like in RMSprop
+    # also we ignore the correction term (Gamma matrix) here
+    
+    grad_logp = grad_logp_func(X, y, theta, data_N, shapes)
+    # assume prior is standard gaussian, then dprior = -theta
+    mean_grad_ll = (grad_logp + theta) / data_N
+    grad_var_new = (1 - alpha) * grad_var + alpha * mean_grad_ll**2
+
+    G = 1 / (1e-5 + tf.sqrt(grad_var_new))
+    noise = tf.random_normal(theta.get_shape())
+    theta_new = theta + lr * G * grad_logp + tf.sqrt(2 * lr * G) * noise
+
+    return theta_new, grad_var_new
+
+def one_step_rmsprop(X, y, theta, grad_var, data_N, grad_logp_func, 
+                  lr=1e-2, alpha=0.5, shapes=None):
+    # run RMSprop
+    grad_logp = grad_logp_func(X, y, theta, data_N, shapes) / data_N
+    grad_var_new = (1 - alpha) * grad_var + alpha * grad_logp**2
+
+    theta_new = theta + lr * grad_logp / (1e-5 + tf.sqrt(grad_var_new))
+
+    return theta_new, grad_var_new
+
+def one_step_adam(X, y, theta, grad_mean, grad_var, data_N, T, grad_logp_func, 
+                  lr=1e-2, beta1=0.9, beta2=0.99, shapes=None):
+    # run sgld with preconditioner like in RMSprop
+    # also we ignore the correction term (Gamma matrix) here
+    
+    grad_logp = grad_logp_func(X, y, theta, data_N, shapes) / data_N
+    grad_mean_new = (1 - beta1) * grad_var + beta1 * grad_logp
+    grad_var_new = (1 - beta2) * grad_var + beta2 * grad_logp**2
+
+    m_hat = grad_mean_new / (1 - beta1 ** T)
+    v_hat = grad_var_new / (1 - beta2 ** T)
+
+    theta_new = theta + lr * m_hat / (1e-5 + tf.sqrt(v_hat))
+
+    return theta_new, grad_mean_new, grad_var_new
 
 def mcmc(z, logp_func, eps, T, alg = 'hmc'):
     assert alg in ['hmc', 'mala']
