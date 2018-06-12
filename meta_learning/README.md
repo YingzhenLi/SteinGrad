@@ -3,16 +3,29 @@
 Why not try to think about how meta-learning can help learning inference methods, 
 such as training posterior samplers that can generalise to unseen tasks? :)
 
+## Latest samplers:
+
+[Wenbo Gong](http://mlg.eng.cam.ac.uk/?portfolio=wenbo-gong) and I recently developed an even more advanced 
+version of meta-learnable **SG-MCMC sampler** than the version included here. 
+With that latest version we can finally do BNN classification on MNIST and also Bayesian RNNs!
+
+The paper is released here:
+
+[Wenbo Gong*](http://mlg.eng.cam.ac.uk/?portfolio=wenbo-gong),
+[Yingzhen Li*](http://yingzhenli.net) and
+[Jose Miguel Hernandez Lobato](https://jmhl.org)
+
+Meta-Learning for Stochastic Gradient MCMC
+
+ArXiv
+
+You can find the code [here](https://github.com/WenboGong/MetaSGMCMC) :) 
+
 ## improved version (update: Jun 2018)
 
 Here I include a new **SG-MCMC sampler** that is learnable via meta-learning. 
 You can have a look at the two files in [sampler/](sampler/) and see how they differ from each other. 
 The meta-leanred **SG-MCMC sampler** is generally better than the meta-learned **approximate sampler**.
-
-[Wenbo Gong](http://mlg.eng.cam.ac.uk/?portfolio=wenbo-gong) and I recently developed an even more advanced 
-version of meta-learnable **SG-MCMC sampler** than the version included here. 
-With that latest version we can finally do BNN classification on MNIST and also Bayesian RNNs!
-We will release the paper and pyTorch code very soon :) There will be a link here pointing to that repo.
 
 For other updates, I improved the orginal code a bit more to make it cleaner. 
 Also I fixed a few bugs and added a new technique that is a bit like "experience reply" in deep RL, 
