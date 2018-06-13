@@ -15,9 +15,9 @@ The paper is released here:
 [Yingzhen Li*](http://yingzhenli.net) and
 [Jose Miguel Hernandez Lobato](https://jmhl.org)
 
-Meta-Learning for Stochastic Gradient MCMC
+[Meta-Learning for Stochastic Gradient MCMC](https://arxiv.org/abs/1806.04522)
 
-ArXiv
+ArXiv 1806.04522
 
 You can find the code [here](https://github.com/WenboGong/MetaSGMCMC) :) 
 
